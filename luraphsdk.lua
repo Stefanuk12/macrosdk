@@ -38,9 +38,26 @@ end
 LPH_NO_UPVALUES = function(f, ...)
     assert(type(setfenv) == "function", "LPH_NO_UPVALUES can only be used on Lua versions with getfenv & setfenv")
     assert(type(f) == "function" and #{...} == 0, "LPH_NO_UPVALUES only accepts a single constant function as an argument.")
-    return f
+
+    local env = getrenv()
+    return setfenv(
+        LPH_NO_VIRTUALIZE(function(...)
+            return func(...)
+        end),
+        setmetatable(
+            {
+                func = f
+            },
+            {
+                __index = env,
+                __newindex = env
+            }
+        )
+    )
 end
 
 LPH_CRASH = function(...)
     assert(#{...} == 0, "LPH_CRASH does not accept any arguments.")
+    game:Shutdown()
+    while true do end
 end
